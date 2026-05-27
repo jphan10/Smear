@@ -31,7 +31,7 @@ CANONICAL_TAG_MIN_SHARE = 0.25
 MAX_CANONICAL_TAGS = 6
 
 
-def _compute_confidence(log_count: int, last_logged: Optional[str], photo_url: Optional[str]) -> float:
+def _compute_confidence(log_count: int, last_logged: Optional[str], photo_url: Optional[str], takedown_votes: int = 0) -> float:
     raw_score = min(1.0, math.log(log_count + 1) / math.log(21))
 
     if last_logged:
@@ -42,7 +42,14 @@ def _compute_confidence(log_count: int, last_logged: Optional[str], photo_url: O
 
     photo_bonus = 0.15 if photo_url else 0.0
 
-    return round(0.7 * raw_score + 0.15 * recency_score + photo_bonus, 4)
+    base = 0.7 * raw_score + 0.15 * recency_score + photo_bonus
+
+    if takedown_votes > 0 and log_count > 0:
+        reset_ratio = takedown_votes / log_count
+        reset_penalty = min(0.8, reset_ratio * 1.5)
+        base = base * (1 - reset_penalty)
+
+    return round(base, 4)
 
 
 def _status_from_confidence(confidence: float) -> str:
@@ -109,7 +116,7 @@ def recompute_canonical_confidence(supabase, canonical_climb_id: str) -> None:
     """Recompute confidence_score and derive status for a single canonical climb."""
     result = (
         supabase.from_("canonical_climbs")
-        .select("log_count, last_logged_at, photo_url")
+        .select("log_count, last_logged_at, photo_url, takedown_votes")
         .eq("id", canonical_climb_id)
         .maybe_single()
         .execute()
@@ -122,6 +129,7 @@ def recompute_canonical_confidence(supabase, canonical_climb_id: str) -> None:
         row.get("log_count") or 0,
         row.get("last_logged_at"),
         row.get("photo_url"),
+        row.get("takedown_votes") or 0,
     )
     status = _status_from_confidence(confidence)
 
