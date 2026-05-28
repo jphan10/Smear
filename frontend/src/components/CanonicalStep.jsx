@@ -5,6 +5,7 @@ import {
   queryFingerprintCandidates,
   computeConfidenceScore,
   seedCanonicalClimb,
+  flagCanonicalReset,
 } from "../lib/canonicalClimbs"
 import { getClimbColorBadgeStyle } from "../lib/climbColors"
 import { useAuth } from "../context/AuthContext"
@@ -84,6 +85,100 @@ function formatRecency(isoString) {
   if (days < 7) return `logged ${days}d ago`
   if (days < 30) return `logged ${Math.floor(days / 7)}w ago`
   return `logged ${Math.floor(days / 30)}mo ago`
+}
+
+const SWIPE_REVEAL_PX = 72
+const SWIPE_THRESHOLD_PX = 36
+
+function SwipeableCandidate({ children, candidateId, onReport }) {
+  const [offset, setOffset] = useState(0)
+  const [isDragging, setIsDragging] = useState(false)
+  const [isRevealed, setIsRevealed] = useState(false)
+  const [isPopping, setIsPopping] = useState(false)
+  const startXRef = useRef(null)
+  const containerRef = useRef(null)
+
+  function handlePointerDown(e) {
+    if (e.target.closest("button[data-report]")) return
+    startXRef.current = e.clientX
+    setIsDragging(true)
+  }
+
+  function handlePointerMove(e) {
+    if (startXRef.current === null) return
+    const delta = e.clientX - startXRef.current
+    const base = isRevealed ? -SWIPE_REVEAL_PX : 0
+    const next = Math.min(0, Math.max(-SWIPE_REVEAL_PX, base + delta))
+    setOffset(next)
+  }
+
+  function handlePointerUp() {
+    setIsDragging(false)
+    startXRef.current = null
+    if (offset < -SWIPE_THRESHOLD_PX) {
+      setOffset(-SWIPE_REVEAL_PX)
+      setIsRevealed(true)
+    } else {
+      setOffset(0)
+      setIsRevealed(false)
+    }
+  }
+
+  async function handleReport() {
+    navigator.vibrate?.(50)
+    setIsPopping(true)
+    try {
+      await flagCanonicalReset(candidateId)
+    } catch {
+      setIsPopping(false)
+      setOffset(0)
+      setIsRevealed(false)
+      return
+    }
+    // Let the pop animation finish before removing from list
+    setTimeout(() => onReport(candidateId), 280)
+  }
+
+  const revealWidth = Math.abs(offset)
+
+  return (
+    <div className="relative overflow-hidden rounded-2xl">
+      {/* Panel grows to fill exactly the gap left by the sliding card */}
+      <div
+        className="absolute inset-y-0 right-0 flex items-center justify-center overflow-hidden rounded-r-2xl bg-red-500"
+        style={{ width: revealWidth }}
+      >
+        {revealWidth >= SWIPE_REVEAL_PX && (
+          <button
+            data-report
+            type="button"
+            onClick={handleReport}
+            className="flex flex-col items-center gap-1"
+          >
+            <svg viewBox="0 0 20 20" fill="white" className="h-5 w-5">
+              <path fillRule="evenodd" d="M3 6a1 1 0 011-1h1V4a1 1 0 112 0v1h6V4a1 1 0 112 0v1h1a1 1 0 011 1v2H3V6zm0 4h14v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6z" clipRule="evenodd" />
+            </svg>
+            <span className="text-[10px] font-semibold text-white">Reset</span>
+          </button>
+        )}
+      </div>
+
+      {/* Swipeable card */}
+      <div
+        ref={containerRef}
+        className={`${isDragging ? "" : "transition-all duration-200"} ${
+          isPopping ? "scale-105 opacity-0 duration-[280ms]" : ""
+        }`}
+        style={{ transform: `translateX(${offset}px)` }}
+        onPointerDown={handlePointerDown}
+        onPointerMove={handlePointerMove}
+        onPointerUp={handlePointerUp}
+        onPointerCancel={handlePointerUp}
+      >
+        {children}
+      </div>
+    </div>
+  )
 }
 
 function CandidateRow({ candidate, score, gymGrade, isSelected, onSelect }) {
@@ -313,12 +408,19 @@ function CanonicalStep({ draft, onChange, onSave }) {
     }
   }
 
+  function handleReport(candidateId) {
+    const next = scored.filter((s) => s.candidate.id !== candidateId)
+    setScored(next)
+    if (selectedId === candidateId) setSelectedId(null)
+    if (next.length === 0) setState("seed")
+  }
+
   const canConfirm = state === "seed" || (state === "candidates" && selectedId !== null)
 
   return (
     <div className="flex min-h-0 flex-1 flex-col px-5 pb-5">
       <div className="min-h-0 flex-1 overflow-y-auto">
-        <div className="rounded-[30px] border border-stone-border bg-stone-surface p-6">
+        <div className="rounded-[30px] bg-stone-surface p-6">
           {state === "loading" && (
             <div className="flex flex-col items-center gap-3 py-8">
               <div className="h-8 w-8 animate-spin rounded-full border-2 border-stone-border border-t-ember" />
@@ -368,14 +470,19 @@ function CanonicalStep({ draft, onChange, onSave }) {
 
               <div className="mt-4 space-y-2">
                 {scored.map(({ candidate, score }) => (
-                  <CandidateRow
+                  <SwipeableCandidate
                     key={candidate.id}
-                    candidate={candidate}
-                    score={score}
-                    gymGrade={draft.gymGrade}
-                    isSelected={selectedId === candidate.id}
-                    onSelect={() => setSelectedId(candidate.id)}
-                  />
+                    candidateId={candidate.id}
+                    onReport={handleReport}
+                  >
+                    <CandidateRow
+                      candidate={candidate}
+                      score={score}
+                      gymGrade={draft.gymGrade}
+                      isSelected={selectedId === candidate.id}
+                      onSelect={() => setSelectedId(candidate.id)}
+                    />
+                  </SwipeableCandidate>
                 ))}
               </div>
 

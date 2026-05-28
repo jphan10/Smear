@@ -49,6 +49,18 @@ export function computeConfidenceScore(candidate: CanonicalClimbObject, userTags
 }
 
 /**
+ * Flag a canonical climb as reset (physically removed from the wall).
+ * Uses takedown_votes as the aggregate counter; one flag per user enforced by DB.
+ */
+export async function flagCanonicalReset(canonicalId: string): Promise<void> {
+  const { supabase } = await import('./supabase')
+  const { error } = await supabase.rpc('flag_canonical_reset', {
+    p_canonical_id: canonicalId,
+  })
+  if (error) throw error
+}
+
+/**
  * Seed a new canonical climb in 'pending' state.
  * Called when no candidates match or user selects "none of these".
  */
