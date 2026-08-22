@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react"
 import { FiCamera, FiChevronDown, FiMapPin, FiX } from "react-icons/fi"
+import AttemptsInput from "./AttemptsInput"
 import BottomSheet from "./BottomSheet"
 import ClimbTagSelector from "./ClimbTagSelector"
 import ColorChipSelector from "./ColorChipSelector"
@@ -17,6 +18,7 @@ const EMPTY_DRAFT = {
   gymGrade: "",
   feltLike: "",
   sendType: "",
+  attempts: null,
   tags: [],
   notes: "",
 }
@@ -467,7 +469,14 @@ export default function EditClimbModal({
                         <button
                           key={option}
                           type="button"
-                          onClick={() => handleChange("sendType", option)}
+                          onClick={() => {
+                            handleChange("sendType", option)
+                            if (option === "Flash") {
+                              handleChange("attempts", null)
+                            } else if (draft.attempts == null) {
+                              handleChange("attempts", 2)
+                            }
+                          }}
                           className={`rounded-[20px] border px-4 py-3 text-left transition-colors ${
                             isSelected
                               ? "border-ember/20 bg-ember-soft"
@@ -482,6 +491,13 @@ export default function EditClimbModal({
                     })}
                   </div>
                 </div>
+
+                {(draft.sendType === "Send" || draft.sendType === "Attempt") && (
+                  <AttemptsInput
+                    value={draft.attempts}
+                    onChange={(value) => handleChange("attempts", value)}
+                  />
+                )}
               </EditSection>
 
               <EditSection {...EDIT_SECTIONS[2]}>

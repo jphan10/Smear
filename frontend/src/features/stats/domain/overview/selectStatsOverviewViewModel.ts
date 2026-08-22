@@ -386,9 +386,7 @@ function getKnownArchetypeTagIds(metricsByGroup: ReturnType<typeof calculateArch
 }
 
 function countTaggedClimbs(climbs: readonly EnrichedClimb[], knownTagIds: ReadonlySet<string>) {
-  return climbs.filter((climb) =>
-    [...Object.values(climb.canonicalTags).flat(), ...climb.tags].some((tag) => knownTagIds.has(tag.id)),
-  ).length
+  return climbs.filter((climb) => climb.tags.some((tag) => knownTagIds.has(tag.id))).length
 }
 
 function toArchetypeCandidates(metricsByGroup: ReturnType<typeof calculateArchetypeMetrics>): ArchetypeCandidate[] {

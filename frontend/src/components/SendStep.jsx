@@ -1,3 +1,4 @@
+import AttemptsInput from "./AttemptsInput"
 import { SEND_OPTIONS } from "../lib/climbFormOptions"
 
 function getOptionStyles(option, isSelected) {
@@ -18,6 +19,16 @@ function getOptionStyles(option, isSelected) {
 
 function SendStep({ draft, onChange, onContinue }) {
   const canContinueFromSend = draft.sendType !== ""
+  const showAttempts = draft.sendType === "Send" || draft.sendType === "Attempt"
+
+  function handleSelectSendType(option) {
+    onChange("sendType", option)
+    if (option === "Flash") {
+      onChange("attempts", null)
+    } else if (draft.attempts == null) {
+      onChange("attempts", 2)
+    }
+  }
 
   return (
     <div className="flex flex-1 flex-col px-5 pb-5">
@@ -29,7 +40,7 @@ function SendStep({ draft, onChange, onContinue }) {
             <button
               key={option}
               type="button"
-              onClick={() => onChange("sendType", option)}
+              onClick={() => handleSelectSendType(option)}
               className={`rounded-[28px] border px-5 py-6 text-left transition-colors ${getOptionStyles(option, isSelected)}`}
             >
               <p className={`text-lg font-semibold ${option === "Send" && isSelected ? "text-ember" : option === "Flash" && isSelected ? "text-ember" : "text-stone-text"}`}>
@@ -43,6 +54,13 @@ function SendStep({ draft, onChange, onContinue }) {
             </button>
           )
         })}
+
+        {showAttempts && (
+          <AttemptsInput
+            value={draft.attempts}
+            onChange={(value) => onChange("attempts", value)}
+          />
+        )}
       </div>
 
       <div className="mt-6 min-h-[20px]">

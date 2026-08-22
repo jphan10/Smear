@@ -9,7 +9,7 @@ function TagsStep({
   saveLabel = "Save Climb",
   isSaving = false,
 }) {
-  const canSaveFromTags = Array.isArray(draft.tags) && draft.tags.length > 0
+  const hasTags = Array.isArray(draft.tags) && draft.tags.length > 0
   const scrollRef = useRef(null)
   const [showFade, setShowFade] = useState(false)
 
@@ -49,34 +49,28 @@ function TagsStep({
           <p className="text-center text-sm text-red-500">{saveError}</p>
         ) : isSaving ? (
           <p className="text-center text-sm text-stone-secondary">Saving climb...</p>
-        ) : null}
-        {!saveError && !isSaving ? (
-          <p
-            aria-hidden={canSaveFromTags}
-            className={`text-center text-sm text-stone-secondary transition-opacity duration-200 ${
-              canSaveFromTags ? "opacity-0" : "opacity-100"
-            }`}
-          >
-            Select at least one to continue
+        ) : (
+          <p className="text-center text-sm text-stone-secondary">
+            Tags help build your climbing archetype — add now or skip for later.
           </p>
-        ) : null}
+        )}
       </div>
 
       <button
         type="button"
         onClick={() => {
-          if (canSaveFromTags && !isSaving) {
+          if (!isSaving) {
             onSave()
           }
         }}
-        disabled={!canSaveFromTags || isSaving}
+        disabled={isSaving}
         className={`mt-3 rounded-full px-6 py-4 text-base font-semibold text-stone-surface transition-all duration-200 ${
-          canSaveFromTags && !isSaving
+          !isSaving
             ? "bg-ember hover:bg-ember-dark active:scale-[0.98]"
             : "cursor-not-allowed bg-stone-border text-stone-muted opacity-80"
         }`}
       >
-        {isSaving ? "Saving…" : saveLabel}
+        {isSaving ? "Saving…" : hasTags ? saveLabel : "Skip"}
       </button>
     </div>
   )

@@ -49,6 +49,7 @@ export interface ClimbObject {
   personal_grade: string | null
   personal_grade_value: number | null
   send_type: string
+  attempts: number | null
   tags: string[]
   photo_url: string | null
   hold_color: string | null
@@ -71,13 +72,11 @@ export interface PostClimbRequest {
   personal_grade?: string | null
   personal_grade_value?: number | null
   send_type: string
+  attempts?: number | null
   tags: string[]
   photo_url?: string | null
   hold_color?: string | null
   notes?: string | null
-  canonical_climb_id?: string | null
-  confidence_score?: number | null
-  override_signal?: boolean
 }
 
 export interface PatchClimbRequest {
@@ -88,6 +87,7 @@ export interface PatchClimbRequest {
   personal_grade?: string | null
   personal_grade_value?: number | null
   send_type?: string
+  attempts?: number | null
   tags?: string[]
   photo_url?: string | null
   hold_color?: string | null

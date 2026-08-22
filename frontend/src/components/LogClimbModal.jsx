@@ -2,7 +2,6 @@ import { useEffect, useMemo, useRef, useState } from "react"
 import { FiMapPin } from "react-icons/fi"
 import GradeStep from "./GradeStep"
 import BottomSheet from "./BottomSheet"
-import CanonicalStep from "./CanonicalStep"
 import GymPickerSheet from "./GymPickerSheet"
 import LogClimbHeader from "./LogClimbHeader"
 import SendStep from "./SendStep"
@@ -10,26 +9,19 @@ import StepProgress from "./StepProgress"
 import SuccessStep from "./SuccessStep"
 import TagsStep from "./TagsStep"
 import { useGym } from "../context/GymContext"
-import {
-  LOG_CLIMB_ROUTE_STEP_INDEX,
-  LOG_CLIMB_SUCCESS_STEP_INDEX,
-} from "../lib/logClimbFlow"
+import { LOG_CLIMB_SUCCESS_STEP_INDEX } from "../lib/logClimbFlow"
 
 const EMPTY_DRAFT = {
   name: "",
   gymId: "",
   gymName: "",
-  photo: null,
-  photoFile: null,
   climbColor: null,
   gymGrade: "",
   feltLike: "",
   sendType: "",
+  attempts: null,
   tags: [],
   notes: "",
-  canonicalClimbId: null,
-  confidenceScore: null,
-  overrideSignal: false,
 }
 
 const CLOSE_ANIMATION_MS = 280
@@ -51,31 +43,14 @@ function LogClimbModal({
   const [saveError, setSaveError] = useState(null)
   const [isSaving, setIsSaving] = useState(false)
   const [isGymPickerOpen, setIsGymPickerOpen] = useState(false)
-  const previousPhotoRef = useRef(null)
   const savingRef = useRef(false)
 
   const resetDraft = () => {
-    if (previousPhotoRef.current?.startsWith("blob:")) {
-      URL.revokeObjectURL(previousPhotoRef.current)
-    }
-
-    previousPhotoRef.current = null
     savingRef.current = false
     setDraft(EMPTY_DRAFT)
     setCurrentStep(0)
     setIsSaving(false)
   }
-
-  useEffect(() => {
-    const currentPhoto = draft.photo
-    const previousPhoto = previousPhotoRef.current
-
-    if (previousPhoto && previousPhoto !== currentPhoto && previousPhoto.startsWith("blob:")) {
-      URL.revokeObjectURL(previousPhoto)
-    }
-
-    previousPhotoRef.current = currentPhoto
-  }, [draft.photo])
 
   useEffect(() => {
     if (isOpen) {
@@ -119,14 +94,6 @@ function LogClimbModal({
     return () => window.clearTimeout(timeoutId)
   }, [activeGym, initialDraft, isOpen])
 
-  useEffect(() => {
-    return () => {
-      if (previousPhotoRef.current?.startsWith("blob:")) {
-        URL.revokeObjectURL(previousPhotoRef.current)
-      }
-    }
-  }, [])
-
   const steps = useMemo(
     () => [
       <GradeStep
@@ -151,32 +118,24 @@ function LogClimbModal({
             tags: nextTags,
           }))
         }
-        onSave={() => setCurrentStep(LOG_CLIMB_ROUTE_STEP_INDEX)}
-        saveError={null}
-        saveLabel="Continue"
-        isSaving={false}
-      />,
-      <CanonicalStep
-        draft={draft}
-        onChange={(field, value) =>
-          setDraft((currentDraft) => ({ ...currentDraft, [field]: value }))
-        }
-        onSave={async (finalDraft) => {
+        onSave={async () => {
           if (savingRef.current) return
           savingRef.current = true
           setSaveError(null)
           setIsSaving(true)
           try {
-            await onSave(finalDraft)
+            await onSave(draft)
             setCurrentStep(LOG_CLIMB_SUCCESS_STEP_INDEX)
           } catch (err) {
             setSaveError(err instanceof Error ? err.message : "Failed to save climb")
-            throw err
           } finally {
             savingRef.current = false
             setIsSaving(false)
           }
         }}
+        saveError={saveError}
+        saveLabel="Save Climb"
+        isSaving={isSaving}
       />,
       <SuccessStep
         draft={draft}
