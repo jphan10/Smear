@@ -9,14 +9,10 @@ function AttemptsInput({ value, onChange }) {
   const sliderValue = value ?? SLIDER_MIN
 
   return (
-    <div className="rounded-[22px] border border-stone-border bg-stone-alt p-4">
-      <div className="mb-3 flex items-center justify-between">
-        <h3 className="text-sm font-semibold text-stone-text">Attempts</h3>
-        <span className="rounded-full border border-stone-border/80 bg-stone-surface px-3 py-1 text-xs font-semibold text-stone-secondary">
-          {value ?? SLIDER_MIN}
-        </span>
-      </div>
-
+    <div
+      className="mt-2 flex items-center gap-2"
+      onClick={(e) => e.stopPropagation()}
+    >
       {isManual ? (
         <input
           type="number"
@@ -28,7 +24,7 @@ function AttemptsInput({ value, onChange }) {
             const next = e.target.value === "" ? null : Number(e.target.value)
             onChange(next === null ? null : Math.min(MANUAL_MAX, Math.max(1, next)))
           }}
-          className="app-native-text-entry w-full rounded-full border border-stone-border bg-stone-surface px-4 py-2 text-sm text-stone-text outline-none focus:border-ember/30"
+          className="app-native-text-entry w-16 rounded-full border border-stone-border bg-stone-surface px-3 py-1 text-xs text-stone-text outline-none focus:border-ember/30"
         />
       ) : (
         <input
@@ -37,16 +33,20 @@ function AttemptsInput({ value, onChange }) {
           max={SLIDER_MAX}
           value={sliderValue}
           onChange={(e) => onChange(Number(e.target.value))}
-          className="w-full accent-ember"
+          className="h-1 flex-1 accent-ember"
         />
       )}
+
+      <span className="w-5 text-right text-xs font-semibold text-stone-secondary">
+        {value ?? SLIDER_MIN}
+      </span>
 
       <button
         type="button"
         onClick={() => setIsManual((prev) => !prev)}
-        className="mt-2 text-xs font-medium text-stone-muted underline-offset-2 hover:underline"
+        className="text-xs font-medium text-stone-muted underline-offset-2 hover:underline"
       >
-        {isManual ? "Use slider" : "Enter manually"}
+        {isManual ? "Slider" : "Type"}
       </button>
     </div>
   )

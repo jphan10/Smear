@@ -35,32 +35,38 @@ function SendStep({ draft, onChange, onContinue }) {
       <div className="flex flex-1 flex-col justify-center gap-4">
         {SEND_OPTIONS.map((option) => {
           const isSelected = draft.sendType === option
+          const optionShowsAttempts =
+            isSelected && showAttempts && (option === "Send" || option === "Attempt")
 
           return (
-            <button
+            <div
               key={option}
-              type="button"
-              onClick={() => handleSelectSendType(option)}
               className={`rounded-[28px] border px-5 py-6 text-left transition-colors ${getOptionStyles(option, isSelected)}`}
             >
-              <p className={`text-lg font-semibold ${option === "Send" && isSelected ? "text-ember" : option === "Flash" && isSelected ? "text-ember" : "text-stone-text"}`}>
-                {option}
-              </p>
-              <p className="mt-1 text-sm text-stone-secondary">
-                {option === "Flash" && "Sent first go."}
-                {option === "Send" && "Completed after working it out."}
-                {option === "Attempt" && "Tried it, but no send yet."}
-              </p>
-            </button>
+              <button
+                type="button"
+                onClick={() => handleSelectSendType(option)}
+                className="block w-full text-left"
+              >
+                <p className={`text-lg font-semibold ${option === "Send" && isSelected ? "text-ember" : option === "Flash" && isSelected ? "text-ember" : "text-stone-text"}`}>
+                  {option}
+                </p>
+                <p className="mt-1 text-sm text-stone-secondary">
+                  {option === "Flash" && "Sent first go."}
+                  {option === "Send" && "Completed after working it out."}
+                  {option === "Attempt" && "Tried it, but no send yet."}
+                </p>
+              </button>
+
+              {optionShowsAttempts && (
+                <AttemptsInput
+                  value={draft.attempts}
+                  onChange={(value) => onChange("attempts", value)}
+                />
+              )}
+            </div>
           )
         })}
-
-        {showAttempts && (
-          <AttemptsInput
-            value={draft.attempts}
-            onChange={(value) => onChange("attempts", value)}
-          />
-        )}
       </div>
 
       <div className="mt-6 min-h-[20px]">
