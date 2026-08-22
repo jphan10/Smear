@@ -180,10 +180,10 @@ describe("stats calculators", () => {
     expect(metrics.movement.every((metric) => metric.climbCount === 0 && metric.climbShare === 0)).toBe(true)
   })
 
-  it("uses canonical tags for archetype attribution instead of user-entered log tags", () => {
+  it("uses user-entered log tags for archetype attribution and ignores canonical tags", () => {
     const metrics = calculateArchetypeMetrics([
       climb({
-        id: "canonical-overrides-user-tags",
+        id: "user-tags-win",
         outcome: "send",
         gradeIndex: 5,
         tags: [tag("jug", "holdType"), tag("cave", "terrain")],
@@ -194,13 +194,13 @@ describe("stats calculators", () => {
       }),
     ])
 
-    expect(metrics.holdType.find((metric) => metric.tagKey === "crimp")?.climbCount).toBe(1)
-    expect(metrics.holdType.find((metric) => metric.tagKey === "jug")?.climbCount).toBe(0)
-    expect(metrics.terrain.find((metric) => metric.tagKey === "slab")?.climbCount).toBe(1)
-    expect(metrics.terrain.find((metric) => metric.tagKey === "cave")?.climbCount).toBe(0)
+    expect(metrics.holdType.find((metric) => metric.tagKey === "jug")?.climbCount).toBe(1)
+    expect(metrics.holdType.find((metric) => metric.tagKey === "crimp")?.climbCount).toBe(0)
+    expect(metrics.terrain.find((metric) => metric.tagKey === "cave")?.climbCount).toBe(1)
+    expect(metrics.terrain.find((metric) => metric.tagKey === "slab")?.climbCount).toBe(0)
   })
 
-  it("falls back to logged tags when canonical archetype tags are empty", () => {
+  it("attributes archetype metrics from logged tags when canonical tags are empty", () => {
     const metrics = calculateArchetypeMetrics([
       climb({
         id: "logged-tags-only",

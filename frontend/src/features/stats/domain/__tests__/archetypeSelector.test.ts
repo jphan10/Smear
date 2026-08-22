@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest"
 import { calculateArchetypeMetrics } from "../calculators"
 import { scaleArchetypePerformanceRadarValues, scaleArchetypeVolumeRadarValues } from "../archetype/radarScaling"
 import { selectArchetypeViewModel } from "../archetype/selectArchetypeViewModel"
-import { canonicalTags, climb, tag } from "./fixtures"
+import { climb, tag } from "./fixtures"
 
 describe("archetype selector", () => {
   it("maps empty datasets to missing displays and centered radar values", () => {
@@ -22,7 +22,7 @@ describe("archetype selector", () => {
           id: "attempted-slab-v8",
           outcome: "attempt",
           gradeIndex: 8,
-          canonicalTags: canonicalTags({ terrain: [tag("slab", "terrain")] }),
+          tags: [tag("slab", "terrain")],
         }),
       ]),
       "terrain",
@@ -50,25 +50,25 @@ describe("archetype selector", () => {
           id: "slab-v3",
           outcome: "send",
           gradeIndex: 3,
-          canonicalTags: canonicalTags({ terrain: [tag("slab", "terrain")] }),
+          tags: [tag("slab", "terrain")],
         }),
         climb({
           id: "vertical-v3",
           outcome: "send",
           gradeIndex: 3,
-          canonicalTags: canonicalTags({ terrain: [tag("vertical", "terrain")] }),
+          tags: [tag("vertical", "terrain")],
         }),
         climb({
           id: "overhang-v3",
           outcome: "send",
           gradeIndex: 3,
-          canonicalTags: canonicalTags({ terrain: [tag("overhang", "terrain")] }),
+          tags: [tag("overhang", "terrain")],
         }),
         climb({
           id: "cave-v3",
           outcome: "send",
           gradeIndex: 3,
-          canonicalTags: canonicalTags({ terrain: [tag("cave", "terrain")] }),
+          tags: [tag("cave", "terrain")],
         }),
       ]),
       "terrain",

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 import { selectStatsOverviewViewModel } from "../overview/selectStatsOverviewViewModel"
-import { canonicalTags, climb, tag } from "./fixtures"
+import { climb, tag } from "./fixtures"
 
 const NOW = "2026-04-22T12:00:00.000Z"
 
@@ -125,42 +125,42 @@ describe("stats overview selector", () => {
           outcome: "send",
           gradeIndex: 4,
           loggedAt: daysAgo(2),
-          canonicalTags: canonicalTags({ terrain: [tag("slab", "terrain")] }),
+          tags: [tag("slab", "terrain")],
         }),
         climb({
           id: "slab-2",
           outcome: "send",
           gradeIndex: 4,
           loggedAt: daysAgo(3),
-          canonicalTags: canonicalTags({ terrain: [tag("slab", "terrain")] }),
+          tags: [tag("slab", "terrain")],
         }),
         climb({
           id: "vertical-1",
           outcome: "send",
           gradeIndex: 4,
           loggedAt: daysAgo(4),
-          canonicalTags: canonicalTags({ terrain: [tag("vertical", "terrain")] }),
+          tags: [tag("vertical", "terrain")],
         }),
         climb({
           id: "vertical-2",
           outcome: "send",
           gradeIndex: 4,
           loggedAt: daysAgo(5),
-          canonicalTags: canonicalTags({ terrain: [tag("vertical", "terrain")] }),
+          tags: [tag("vertical", "terrain")],
         }),
         climb({
           id: "overhang-1",
           outcome: "send",
           gradeIndex: 4,
           loggedAt: daysAgo(6),
-          canonicalTags: canonicalTags({ terrain: [tag("overhang", "terrain")] }),
+          tags: [tag("overhang", "terrain")],
         }),
         climb({
           id: "overhang-2",
           outcome: "send",
           gradeIndex: 4,
           loggedAt: daysAgo(7),
-          canonicalTags: canonicalTags({ terrain: [tag("overhang", "terrain")] }),
+          tags: [tag("overhang", "terrain")],
         }),
       ],
       { now: NOW },
@@ -185,7 +185,7 @@ describe("stats overview selector", () => {
         outcome: index < 4 ? "send" : "attempt",
         gradeIndex: 5,
         loggedAt: daysAgo(index + 1),
-        canonicalTags: canonicalTags({ terrain: [tag("overhang", "terrain")] }),
+        tags: [tag("overhang", "terrain")],
       }),
     )
     const view = selectStatsOverviewViewModel(
@@ -196,7 +196,7 @@ describe("stats overview selector", () => {
           outcome: "send",
           gradeIndex: 5,
           loggedAt: daysAgo(8),
-          canonicalTags: canonicalTags({ terrain: [tag("slab", "terrain")] }),
+          tags: [tag("slab", "terrain")],
         }),
       ],
       { now: NOW },
@@ -217,7 +217,7 @@ describe("stats overview selector", () => {
         outcome: index < 4 ? "send" : "attempt",
         gradeIndex: 5,
         loggedAt: daysAgo(index + 1),
-        canonicalTags: canonicalTags({ holdType: [tag("crimp", "holdType")] }),
+        tags: [tag("crimp", "holdType")],
       }),
     )
     const view = selectStatsOverviewViewModel(
@@ -228,7 +228,7 @@ describe("stats overview selector", () => {
           outcome: "send",
           gradeIndex: 5,
           loggedAt: daysAgo(8),
-          canonicalTags: canonicalTags({ holdType: [tag("sloper", "holdType")] }),
+          tags: [tag("sloper", "holdType")],
         }),
       ],
       { now: NOW },

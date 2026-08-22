@@ -26,15 +26,12 @@ export interface ClimbDraft {
   gymGrade: string
   feltLike: string
   sendType: string
+  attempts: number | null
   tags: string[]
   photo: string | null       // blob URL for preview only
   photoFile: File | null     // raw File for upload
   climbColor: string | null
   notes: string
-  canonicalClimbId: string | null
-  confidenceScore: number | null
-  overrideSignal: boolean
-
 }
 
 export interface Climb {
@@ -48,6 +45,7 @@ export interface Climb {
   personal_grade: string | null
   personal_grade_value: number | null
   send_type: string
+  attempts: number | null
   tags: string[]
   photo_url: string | null
   climbColor: string | null
@@ -70,6 +68,7 @@ export function applyDraftToClimb(climb: Climb, draft: ClimbDraft): Climb {
     personal_grade: draft.feltLike || null,
     personal_grade_value: draft.feltLike ? gradeToValue(draft.feltLike) : null,
     send_type: draft.sendType.toLowerCase(),
+    attempts: draft.attempts,
     tags: draft.tags.map((tag) => tag.toLowerCase()),
     climbColor: draft.climbColor,
     notes: draft.notes || null,
@@ -96,6 +95,7 @@ function mapApiClimb(obj: ClimbObject): Climb {
     personal_grade: obj.personal_grade,
     personal_grade_value: obj.personal_grade_value,
     send_type: obj.send_type,
+    attempts: obj.attempts ?? null,
     tags: obj.tags,
     photo_url: obj.photo_url,
     climbColor: obj.hold_color,
@@ -144,12 +144,10 @@ export async function insertClimb(draft: ClimbDraft, userId: string): Promise<Cl
     personal_grade: draft.feltLike || null,
     personal_grade_value: draft.feltLike ? gradeToValue(draft.feltLike) : null,
     send_type: draft.sendType.toLowerCase(),
+    attempts: draft.attempts ?? null,
     tags: draft.tags.map((t) => t.toLowerCase()),
     photo_url: photoUrl,
     hold_color: draft.climbColor || null,
-    canonical_climb_id: draft.canonicalClimbId || null,
-    confidence_score: draft.confidenceScore ?? null,
-    override_signal: draft.overrideSignal ?? false,
   })
 
   return mapApiClimb(created)
@@ -174,6 +172,7 @@ export async function updateClimb(
     personal_grade: draft.feltLike || null,
     personal_grade_value: draft.feltLike ? gradeToValue(draft.feltLike) : null,
     send_type: draft.sendType.toLowerCase(),
+    attempts: draft.attempts ?? null,
     tags: draft.tags.map((tag) => tag.toLowerCase()),
     photo_url: photoUrl,
     hold_color: draft.climbColor || null,
@@ -253,13 +252,11 @@ export function toClimbDraft(climb: Climb): ClimbDraft {
     gymGrade: climb.gym_grade,
     feltLike: climb.personal_grade ?? '',
     sendType: toTitleCase(climb.send_type),
+    attempts: climb.attempts,
     tags: climb.tags.map(toTitleCase),
     photo: climb.photo_url,
     photoFile: null,
     climbColor: climb.climbColor,
     notes: climb.notes ?? '',
-    canonicalClimbId: null,
-    confidenceScore: null,
-    overrideSignal: false,
   }
 }

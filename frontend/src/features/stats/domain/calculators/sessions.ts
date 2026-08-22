@@ -159,12 +159,6 @@ function getDistinctStyleCount(climbs: readonly EnrichedClimb[]): number {
     for (const tag of climb.tags) {
       styleIds.add(tag.id)
     }
-
-    for (const tags of Object.values(climb.canonicalTags)) {
-      for (const tag of tags) {
-        styleIds.add(tag.id)
-      }
-    }
   }
 
   return styleIds.size
