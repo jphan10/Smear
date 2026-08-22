@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest"
 import { calculateArchetypeMetrics } from "../calculators"
 import { scaleArchetypePerformanceRadarValues, scaleArchetypeVolumeRadarValues } from "../archetype/radarScaling"
 import { selectArchetypeViewModel } from "../archetype/selectArchetypeViewModel"
-import { canonicalTags, climb, tag } from "./fixtures"
+import { climb, tag } from "./fixtures"
 
 describe("archetype selector", () => {
   it("maps empty datasets to missing displays and centered radar values", () => {

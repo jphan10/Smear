@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 import { selectStatsOverviewViewModel } from "../overview/selectStatsOverviewViewModel"
-import { canonicalTags, climb, tag } from "./fixtures"
+import { climb, tag } from "./fixtures"
 
 const NOW = "2026-04-22T12:00:00.000Z"
 
