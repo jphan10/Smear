@@ -1,4 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
+import type { ReactNode } from 'react'
+import { Link } from 'react-router-dom'
 import { FiSearch, FiX, FiUser } from 'react-icons/fi'
 import type { UserSearchResult } from '../../lib/api'
 import { searchUsers } from '../../lib/api'
@@ -7,6 +9,26 @@ import FollowButton from './FollowButton'
 interface UserSearchSheetProps {
   isOpen: boolean
   onClose: () => void
+}
+
+function ProfileLink({
+  username,
+  onNavigate,
+  className = '',
+  children,
+}: {
+  username: string | null
+  onNavigate: () => void
+  className?: string
+  children: ReactNode
+}) {
+  if (!username) return <div className={className}>{children}</div>
+
+  return (
+    <Link to={`/u/${username}`} state={{ backLabel: 'Back' }} onClick={onNavigate} className={className}>
+      {children}
+    </Link>
+  )
 }
 
 export default function UserSearchSheet({ isOpen, onClose }: UserSearchSheetProps) {
@@ -87,21 +109,23 @@ export default function UserSearchSheet({ isOpen, onClose }: UserSearchSheetProp
         <ul className="divide-y divide-stone-border">
           {results.map((user) => (
             <li key={user.user_id} className="flex items-center gap-3 px-4 py-3">
-              {user.avatar_url ? (
-                <img src={user.avatar_url} alt={user.display_name ?? ''} className="h-10 w-10 rounded-full object-cover" />
-              ) : (
-                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-ember/10 text-ember">
-                  <FiUser className="h-5 w-5" />
-                </div>
-              )}
-              <div className="min-w-0 flex-1">
+              <ProfileLink username={user.username} onNavigate={onClose}>
+                {user.avatar_url ? (
+                  <img src={user.avatar_url} alt={user.display_name ?? ''} className="h-10 w-10 rounded-full object-cover" />
+                ) : (
+                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-ember/10 text-ember">
+                    <FiUser className="h-5 w-5" />
+                  </div>
+                )}
+              </ProfileLink>
+              <ProfileLink username={user.username} onNavigate={onClose} className="min-w-0 flex-1">
                 <p className="truncate text-sm font-semibold text-stone-text">
                   {user.display_name ?? user.username ?? 'Climber'}
                 </p>
                 {user.username && (
                   <p className="truncate text-xs text-stone-secondary">@{user.username}</p>
                 )}
-              </div>
+              </ProfileLink>
               <FollowButton
                 targetUserId={user.user_id}
                 initialIsFollowing={user.is_following}
