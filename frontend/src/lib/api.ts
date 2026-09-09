@@ -575,6 +575,47 @@ export async function searchUsers(q: string): Promise<UserSearchResult[]> {
   return apiFetch<UserSearchResult[]>(`/social/users/search?q=${encodeURIComponent(q)}`)
 }
 
+export interface PublicProfileHardestSend {
+  grade_label: string
+  grade_value: number | null
+  gym_name: string | null
+  color_label: string | null
+  style_tag: string | null
+  logged_at: string | null
+}
+
+export interface PublicProfileArchetypeAxis {
+  id: string
+  label: string
+  value: number
+}
+
+export interface PublicProfileArchetype {
+  descriptor: string
+  secondary_text: string
+  axes: PublicProfileArchetypeAxis[]
+}
+
+export interface PublicProfileObject {
+  user_id: string
+  username: string | null
+  display_name: string | null
+  avatar_url: string | null
+  home_gym_name: string | null
+  total_climbs: number
+  hardest_send: PublicProfileHardestSend | null
+  hardest_flash_label: string | null
+  archetype: PublicProfileArchetype | null
+  follower_count: number
+  following_count: number
+  is_following: boolean
+  is_self: boolean
+}
+
+export async function getPublicProfile(username: string): Promise<PublicProfileObject> {
+  return apiFetch<PublicProfileObject>(`/social/users/${encodeURIComponent(username)}/profile`)
+}
+
 export async function addReaction(sessionId: string): Promise<void> {
   await apiFetchVoid(`/social/sessions/${sessionId}/reactions`, { method: 'POST' })
 }

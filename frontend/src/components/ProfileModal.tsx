@@ -16,6 +16,8 @@ interface ProfileModalProps {
   isOpen: boolean
   onClose: () => void
   onSave?: () => void
+  /** Open straight into the edit form instead of the read-only view. */
+  startInEditMode?: boolean
 }
 
 interface DraftData {
@@ -32,7 +34,7 @@ interface PasswordData {
   confirmPassword: string
 }
 
-export default function ProfileModal({ isOpen, onClose, onSave }: ProfileModalProps) {
+export default function ProfileModal({ isOpen, onClose, onSave, startInEditMode = false }: ProfileModalProps) {
   const { user } = useAuth()
   const [isVisible, setIsVisible] = useState(false)
   const [isRendered, setIsRendered] = useState(false)
@@ -88,7 +90,7 @@ export default function ProfileModal({ isOpen, onClose, onSave }: ProfileModalPr
     if (isOpen) {
       setIsRendered(true)
       setIsVisible(false)
-      setIsEditMode(false)
+      setIsEditMode(startInEditMode)
       requestAnimationFrame(() => {
         requestAnimationFrame(() => setIsVisible(true))
       })
@@ -97,7 +99,7 @@ export default function ProfileModal({ isOpen, onClose, onSave }: ProfileModalPr
       setIsVisible(false)
       setTimeout(() => setIsRendered(false), 280)
     }
-  }, [isOpen, loadProfile])
+  }, [isOpen, loadProfile, startInEditMode])
 
   const handleDraftChange = (field: string, value: string) => {
     setDraft((prev) => ({ ...prev, [field]: value }))

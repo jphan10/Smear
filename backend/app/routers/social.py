@@ -1,4 +1,5 @@
 import logging
+from collections import Counter
 from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
@@ -7,6 +8,10 @@ from app.gyms import get_supabase
 from app.logging_utils import short_id
 from app.models import (
     CommentObject,
+    PublicProfileArchetype,
+    PublicProfileArchetypeAxis,
+    PublicProfileHardestSend,
+    PublicProfileObject,
     FollowObject,
     FollowsResponse,
     PostCommentRequest,
@@ -378,4 +383,139 @@ def post_comment(session_id: str, body: PostCommentRequest, user_id: str = Depen
         author_display_name=profile.get("display_name"),
         author_username=profile.get("username"),
         author_avatar_url=profile.get("avatar_url"),
+    )
+
+
+# ── Public profile ────────────────────────────────────────────────────────────
+
+PUBLIC_PROFILE_CLIMB_LIMIT = 2000
+ARCHETYPE_MIN_AXES = 3
+ARCHETYPE_MAX_AXES = 5
+
+
+def _title_case(value: Optional[str]) -> Optional[str]:
+    if not value or not value.strip():
+        return None
+    cleaned = value.strip()
+    return cleaned[0].upper() + cleaned[1:]
+
+
+def _build_archetype(climbs: list[dict]) -> Optional[PublicProfileArchetype]:
+    """Aggregate style tags into a radar. Aggregate only — no per-climb data leaves the server."""
+    tag_counter: Counter = Counter()
+    for climb in climbs:
+        for tag in climb.get("tags") or []:
+            if tag and str(tag).strip():
+                tag_counter[str(tag).strip().lower()] += 1
+
+    if len(tag_counter) < ARCHETYPE_MIN_AXES:
+        return None
+
+    top_tags = tag_counter.most_common(ARCHETYPE_MAX_AXES)
+    max_count = top_tags[0][1]
+    tagged_climbs = sum(1 for climb in climbs if climb.get("tags"))
+    top_share = round(100 * top_tags[0][1] / tagged_climbs) if tagged_climbs else 0
+
+    return PublicProfileArchetype(
+        descriptor=_title_case(top_tags[0][0]) or "Mixed",
+        secondary_text=f"{top_share}% of tagged climbs",
+        axes=[
+            PublicProfileArchetypeAxis(
+                id=tag,
+                label=_title_case(tag) or tag,
+                value=max(round(100 * count / max_count), 12),
+            )
+            for tag, count in top_tags
+        ],
+    )
+
+
+@router.get("/users/{username}/profile", response_model=PublicProfileObject)
+def get_public_profile(username: str, user_id: str = Depends(get_current_user)):
+    supabase = get_supabase()
+
+    profile_result = (
+        supabase.from_("profiles")
+        .select("id, display_name, username, avatar_url")
+        .eq("username", username)
+        .limit(1)
+        .execute()
+    )
+    profile_rows = profile_result.data or []
+    if not profile_rows:
+        raise HTTPException(status_code=404, detail="Profile not found")
+
+    profile = profile_rows[0]
+    target_id = profile["id"]
+
+    climbs_result = (
+        supabase.from_("climbs")
+        .select("gym_id, gym_name, gym_grade, gym_grade_value, send_type, tags, hold_color, created_at")
+        .eq("user_id", target_id)
+        .order("created_at", desc=True)
+        .limit(PUBLIC_PROFILE_CLIMB_LIMIT)
+        .execute()
+    )
+    climbs = climbs_result.data or []
+
+    def _grade_value(climb: dict) -> Optional[int]:
+        value = climb.get("gym_grade_value")
+        return value if isinstance(value, int) else None
+
+    def _hardest(rows: list[dict]) -> Optional[dict]:
+        graded = [row for row in rows if _grade_value(row) is not None]
+        return max(graded, key=lambda row: row["gym_grade_value"]) if graded else None
+
+    sent_climbs = [c for c in climbs if (c.get("send_type") or "").lower() in ("send", "flash")]
+    flash_climbs = [c for c in climbs if (c.get("send_type") or "").lower() == "flash"]
+    hardest_send_row = _hardest(sent_climbs)
+    hardest_flash_row = _hardest(flash_climbs)
+
+    gym_counter: Counter = Counter(c["gym_name"] for c in climbs if c.get("gym_name"))
+    home_gym_name = gym_counter.most_common(1)[0][0] if gym_counter else None
+
+    followers_result = (
+        supabase.from_("follows").select("follower_id", count="exact").eq("following_id", target_id).execute()
+    )
+    following_result = (
+        supabase.from_("follows").select("following_id", count="exact").eq("follower_id", target_id).execute()
+    )
+    viewer_follow_result = (
+        supabase.from_("follows")
+        .select("following_id")
+        .eq("follower_id", user_id)
+        .eq("following_id", target_id)
+        .execute()
+    )
+
+    hardest_send = None
+    if hardest_send_row is not None:
+        tags = hardest_send_row.get("tags") or []
+        hardest_send = PublicProfileHardestSend(
+            grade_label=hardest_send_row.get("gym_grade") or f"V{hardest_send_row['gym_grade_value']}",
+            grade_value=hardest_send_row.get("gym_grade_value"),
+            gym_name=hardest_send_row.get("gym_name"),
+            color_label=_title_case(hardest_send_row.get("hold_color")),
+            style_tag=_title_case(tags[0]) if tags else None,
+            logged_at=hardest_send_row.get("created_at"),
+        )
+
+    hardest_flash_label = None
+    if hardest_flash_row is not None:
+        hardest_flash_label = hardest_flash_row.get("gym_grade") or f"V{hardest_flash_row['gym_grade_value']}"
+
+    return PublicProfileObject(
+        user_id=target_id,
+        username=profile.get("username"),
+        display_name=profile.get("display_name"),
+        avatar_url=profile.get("avatar_url"),
+        home_gym_name=home_gym_name,
+        total_climbs=len(climbs),
+        hardest_send=hardest_send,
+        hardest_flash_label=hardest_flash_label,
+        archetype=_build_archetype(climbs),
+        follower_count=followers_result.count or 0,
+        following_count=following_result.count or 0,
+        is_following=bool(viewer_follow_result.data),
+        is_self=target_id == user_id,
     )

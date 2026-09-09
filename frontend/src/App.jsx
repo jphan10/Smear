@@ -14,6 +14,7 @@ import { deleteClimb, fetchPaginatedClimbs, insertClimb, toClimbDraft, updateCli
 import ClimbDetailPage from "./pages/ClimbDetailPage"
 import LogbookPage from "./pages/LogbookPage"
 import ProfilePage from "./pages/ProfilePage"
+import PublicProfilePage from "./pages/PublicProfilePage"
 import SocialPage from "./pages/SocialPage"
 import StatsPage from "./pages/StatsPage"
 import StatsDetailScrollReset from "./features/stats/components/StatsDetailScrollReset"
@@ -223,6 +224,7 @@ function ProtectedApp() {
           />
           <Route path="/coaching" element={<CoachingDetailPage />} />
           <Route path="/profile" element={<ProfilePage />} />
+          <Route path="/u/:username" element={<PublicProfilePage />} />
           <Route path="/admin/duplicates" element={isAdmin ? <AdminDuplicatesPage /> : <Navigate to="/home" replace />} />
         </Routes>
         <SocialPage isActive={isSocialRoute} />

@@ -281,6 +281,43 @@ class UserSearchResult(BaseModel):
     is_following: bool = False
 
 
+class PublicProfileHardestSend(BaseModel):
+    grade_label: str
+    grade_value: Optional[int] = None
+    gym_name: Optional[str] = None
+    color_label: Optional[str] = None
+    style_tag: Optional[str] = None
+    logged_at: Optional[str] = None
+
+
+class PublicProfileArchetypeAxis(BaseModel):
+    id: str
+    label: str
+    value: int
+
+
+class PublicProfileArchetype(BaseModel):
+    descriptor: str
+    secondary_text: str
+    axes: list[PublicProfileArchetypeAxis] = []
+
+
+class PublicProfileObject(BaseModel):
+    user_id: str
+    username: Optional[str] = None
+    display_name: Optional[str] = None
+    avatar_url: Optional[str] = None
+    home_gym_name: Optional[str] = None
+    total_climbs: int = 0
+    hardest_send: Optional[PublicProfileHardestSend] = None
+    hardest_flash_label: Optional[str] = None
+    archetype: Optional[PublicProfileArchetype] = None
+    follower_count: int = 0
+    following_count: int = 0
+    is_following: bool = False
+    is_self: bool = False
+
+
 class CommentObject(BaseModel):
     id: str
     session_id: str

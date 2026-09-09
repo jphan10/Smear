@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import type { ReactNode } from 'react'
 import { Link } from 'react-router-dom'
 import { FiUser, FiHeart, FiMessageCircle, FiZap, FiChevronDown } from 'react-icons/fi'
 import type { SessionCardObject, SessionDetailObject } from '../../lib/api'
@@ -37,6 +38,20 @@ function formatDuration(startedAt: string | null, endedAt: string | null): strin
   const h = Math.floor(mins / 60)
   const m = mins % 60
   return m > 0 ? `${h}h ${m}m` : `${h}h`
+}
+
+function AuthorLink({ username, children }: { username: string | null; children: ReactNode }) {
+  if (!username) return <>{children}</>
+
+  return (
+    <Link
+      to={`/u/${username}`}
+      state={{ backLabel: 'Social' }}
+      className="block min-w-0 rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ember/40"
+    >
+      {children}
+    </Link>
+  )
 }
 
 export default function SessionCard({ session, onCommentTap, commentCountDelta = 0 }: SessionCardProps) {
@@ -113,19 +128,23 @@ export default function SessionCard({ session, onCommentTap, commentCountDelta =
       <div className="p-4">
         {/* Header: avatar + name + gym + time */}
         <div className="flex items-center gap-3">
-          {session.author_avatar_url ? (
-            <img
-              src={session.author_avatar_url}
-              alt={displayName}
-              className="h-9 w-9 shrink-0 rounded-full object-cover"
-            />
-          ) : (
-            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-ember/10 text-ember">
-              <FiUser className="h-4 w-4" />
-            </div>
-          )}
+          <AuthorLink username={session.author_username}>
+            {session.author_avatar_url ? (
+              <img
+                src={session.author_avatar_url}
+                alt={displayName}
+                className="h-9 w-9 shrink-0 rounded-full object-cover"
+              />
+            ) : (
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-ember/10 text-ember">
+                <FiUser className="h-4 w-4" />
+              </div>
+            )}
+          </AuthorLink>
           <div className="min-w-0 flex-1">
-            <p className="truncate text-sm font-semibold text-stone-text">{displayName}</p>
+            <AuthorLink username={session.author_username}>
+              <p className="truncate text-sm font-semibold text-stone-text">{displayName}</p>
+            </AuthorLink>
             <p className="truncate text-xs text-stone-secondary">
               {session.gym_name ?? 'Unknown Gym'}
               {duration && <span> · {duration}</span>}
